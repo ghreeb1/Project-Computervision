@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Detection for Pneumonia</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #465768, #181414);
+            margin: 0;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .triangle {
+            position: absolute;
+            bottom: -100px;
+            width: 0;
+            height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            border-bottom: 120px solid rgba(0, 0, 0, 0.1);
+            animation: float 10s infinite;
+            animation-timing-function: linear;
+        }
+
+        .triangle:nth-child(1) {
+            left: 15%;
+            animation-duration: 8s;
+        }
+
+        .triangle:nth-child(2) {
+            left: 30%;
+            animation-duration: 12s;
+        }
+
+        .triangle:nth-child(3) {
+            left: 50%;
+            animation-duration: 14s;
+        }
+
+        .triangle:nth-child(4) {
+            left: 70%;
+            animation-duration: 16s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-1200px) rotate(360deg);
+            }
+        }
+
+        .container {
+            text-align: center;
+            background: #f9f9f9;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            width: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .image-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .upload-section, .result-section {
+            width: 48%;
+            text-align: center;
+            background: #fff;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .upload-section:hover, .result-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(99, 78, 78, 0.2);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .image-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 400px;
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+        }
+
+        #preview {
+            width: 100%;
+            height: auto;
+            border: none;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-upload label {
+            display: block;
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .image-upload label:hover {
+            background: #0056b3;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="background">
+        <div class="triangle"></div>
+        <div class="triangle"></div>
+        <div class="triangle"></div>
+        <div class="triangle"></div>
+    </div>
+    <div class="container">
+        <h1>Pneumonia Detection</h1>
+        <div class="image-section">
+            <div class="upload-section">
+                <h2>Upload Image</h2>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="image-upload">
+                        <label for="file-input">
+                            <img id="preview" src="placeholder.png" alt="Image Preview">
+                        </label>
+                        <input id="file-input" type="file" name="file" accept="image/*" onchange="previewImage(event)" style="display:none;">
+                    </div>
+                </form>
+            </div>
+            <div class="result-section">
+                <h2>Detection Result</h2>
+                <button id="detect-button" onclick="detectImage()">Detect Image</button>
+                <p id="result" class="result"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const output = document.getElementById('preview');
+                output.src = reader.result;
+                output.style.opacity = 0;
+                setTimeout(() => {
+                    output.style.opacity = 1;
+                }, 300);
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function uploadImage() {
+            const formData = new FormData(document.getElementById('upload-form'));
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('result').innerText = `Detection Result: ${data.result}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function detectImage() {
+            const previewImage = document.getElementById('preview').src;
+            if (previewImage.includes('placeholder.png')) {
+                alert('Please upload an image first.');
+            } else {
+                uploadImage(); // Call uploadImage to detect and show results
+            }
+        }
+    </script>
+</body>
+</html>
